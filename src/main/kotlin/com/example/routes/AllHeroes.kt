@@ -1,6 +1,5 @@
 package com.example.routes
 
-import com.example.database.Heroes
 import com.example.models.ApiResponse
 import com.example.models.HeroesServices
 import com.example.repository.HeroRepository
@@ -22,9 +21,9 @@ fun Routing.getAllHeroes(){
         try {
             val page = call.request.queryParameters["page"]?.toInt() ?: 1
 
-            require(page in 1..5)
+//            require(page in 1..5)
 
-            val apiResponse = heroRepository.getAllHeroes(page)
+            val apiResponse = heroRepository.getPaginationHeroes(page)
 
             call.respond(
                 message = apiResponse,
@@ -44,17 +43,35 @@ fun Routing.getAllHeroes(){
         }
     }
 
-    route("/heroes") {
-        get {
-            try {
-                val heroes = heroesServices.getAllHeroes()
-                call.respond(heroes) // Kirim data ke client
-            } catch (e: Exception) {
-                call.respondText(
-                    "Failed to fetch heroes: ${e.localizedMessage}",
-                    status = HttpStatusCode.InternalServerError
-                )
-            }
+    get("/heroes") {
+        try {
+            val heroes = heroesServices.getAllHeroes()
+            call.respond(
+                message = ApiResponse(
+                    success = true,
+                    heroes = heroes
+                ),
+                status = HttpStatusCode.OK
+            ) // Kirim data ke client
+        } catch (e: Exception) {
+            call.respondText(
+                "Failed to fetch heroes: ${e.localizedMessage}",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
+    }
+
+    get("/boruto/hero") {
+        try {
+            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+            val pageSize = 5 // Jumlah data per halaman
+            val heroes = heroesServices.getPaginatedHeroes(page, pageSize)
+            call.respond(heroes)
+        } catch (e: Exception) {
+            call.respondText(
+                "Failed to fetch heroes: ${e.localizedMessage}",
+                status = HttpStatusCode.InternalServerError
+            )
         }
     }
 
